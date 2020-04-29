@@ -1,4 +1,5 @@
 import pygame
+import random
 
 
 class Enemy:
@@ -7,6 +8,25 @@ class Enemy:
         self.x = x
         self.y = y
         self.image = pygame.image.load("imgs/fiende_rak.png")
+        self.no_shot = 0
+        self.shots = []
+
+    def rand_shot(self):
+        if random.randrange(0, 1000000) <= (self.no_shot+20) and len(self.shots) <= 1:
+            self.shots.append(pygame.Rect(self.x+32, self.y+64, 2, 4))
+            self.no_shot = 0
+        else:
+            self.no_shot += 5
+
+    def check_shot(self):
+        for i in range(len(self.shots)-1, 0, -1):
+            if self.shots[i].y > 600:
+                self.shots.pop(i)
+            elif self.shots[i].y >= playerY and playerX < self.shots[i].x < playerX + 64:
+                print("You would've died son")
+            else:
+                self.shots[i] = self.shots[i].move(0, 1)
+                pygame.draw.rect(screen, (255, 0, 0), self.shots[i])
 
 
 # Initialize pygame
@@ -19,7 +39,7 @@ screen = pygame.display.set_mode((800, 600))
 
 # Title
 pygame.display.set_caption("Shitty Space Game")
-icon = pygame.image.load("rocket.png")
+icon = pygame.image.load("imgs/P.png")
 pygame.display.set_icon(icon)
 
 # Sounds
@@ -49,7 +69,7 @@ def draw_player(x, y):
 def wallhit_y(self):
     for array in self:
         for enemy in array:
-            enemy.y += 30
+            enemy.y += 16
 
 
 # Enemy
@@ -58,8 +78,8 @@ for i in range(0, 3):
     for j in range(0, 6):
         grid[i].append(Enemy(1 + 96*j, i*96))
 
-deltaX = 0.2
-enemyImg = pygame.image.load("spaceship.png")
+deltaX = 0.3
+enemyImg = pygame.image.load("imgs/P.png")
 
 
 def draw_enemy(enemy):
@@ -71,10 +91,10 @@ def draw_enemy(enemy):
 shot = 0
 bulletX = 0
 bulletY = 0
-bullet_change = 0.5
+bullet_change = 1
 
 # Game loop
-pygame.mixer.music.play()
+pygame.mixer.music.play(-1)
 pygame.mixer.Sound.play(ambient_loop, -1)
 running = True
 while running:
@@ -89,10 +109,10 @@ while running:
         # If keystroke is pressed, check if left or right
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                changeX = -0.3
+                changeX = -1
                 playerImg = playerImgArray[0]
             if event.key == pygame.K_RIGHT:
-                changeX = 0.3
+                changeX = 1
                 playerImg = playerImgArray[2]
         if event.type == pygame.KEYUP:
             if (event.key == pygame.K_LEFT and changeX < 0) or (event.key == pygame.K_RIGHT and changeX > 0):
@@ -136,6 +156,8 @@ while running:
         array = grid[i]
         for j in range(len(array)-1, -1, -1):
             enemy = array[j]
+            enemy.rand_shot()
+            enemy.check_shot()
             if array[len(array)-1].x >= 800-64 and deltaX > 0:
                 deltaX = -deltaX
                 wallhit_y(grid)
@@ -152,8 +174,8 @@ while running:
 
     if len(grid[0]) == 0 and len(grid[1]) == 0 and len(grid[2]) == 0:
         pygame.mixer.music.stop()
+        ambient_loop.stop()
         screen.fill((255, 255, 255))
-        draw_player(playerX, playerY)
         win_font = pygame.font.Font('freesansbold.ttf', 64)
         win_text = win_font.render("YOU WIN", True, (0, 0, 0))
         screen.blit(win_text, ((800-win_text.get_width())/2, (600-win_text.get_height())/2))
