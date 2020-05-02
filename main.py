@@ -24,7 +24,7 @@ class Enemy:
                 self.shots.pop(i)
             elif self.shots[i].y >= playerY and playerX < self.shots[i].x < playerX + 64:
                 global hp
-                hp -= 9
+                hp -= 0
                 self.shots.pop(i)
                 print(hp)
             else:
@@ -159,18 +159,23 @@ while running:
             shot = 0
 
     # Update enemy
+    for i in range(len(grid)):
+
+        if len(grid[i]) > 0 and grid[i][len(grid[i])-1].x > 800-64 and deltaX > 0:
+            wallhit_y(grid)
+            deltaX = -deltaX
+
+        elif 0 < len(grid[i]) and grid[i][0].x < 0 and deltaX < 0:
+            wallhit_y(grid)
+            deltaX = -deltaX
+
     for i in range(len(grid)-1, -1, -1):
+
         array = grid[i]
         for j in range(len(array)-1, -1, -1):
             enemy = array[j]
             enemy.rand_shot()
             enemy.check_shot()
-            if array[len(array)-1].x >= 800-64 and deltaX > 0:
-                deltaX = -deltaX
-                wallhit_y(grid)
-            elif array[0].x <= 0 and deltaX < 0:
-                deltaX = -deltaX
-                wallhit_y(grid)
             if enemy.x + 64 > bulletX > enemy.x and enemy.y + 64 > bulletY > enemy.y and shot == 1:
                 array.pop(j)
                 enemy_death.play()
@@ -210,4 +215,4 @@ while running:
     # Draw entities
 
     pygame.display.flip()
-    clock.tick_busy_loop(60)
+    clock.tick_busy_loop(24)
