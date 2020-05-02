@@ -12,20 +12,23 @@ class Enemy:
         self.shots = []
 
     def rand_shot(self):
-        if random.randrange(0, 1000000) <= (self.no_shot+20) and len(self.shots) <= 1:
-            self.shots.append(pygame.Rect(self.x+32, self.y+64, 2, 4))
+        if random.randrange(0, 100) <= self.no_shot and len(self.shots) <= 1:
+            self.shots.append(pygame.Rect(self.x+30, self.y+64, 4, 8))
             self.no_shot = 0
         else:
-            self.no_shot += 5
+            self.no_shot += .01
 
     def check_shot(self):
         for i in range(len(self.shots)-1, 0, -1):
             if self.shots[i].y > 600:
                 self.shots.pop(i)
             elif self.shots[i].y >= playerY and playerX < self.shots[i].x < playerX + 64:
-                print("You would've died son")
+                global hp
+                hp -= 9
+                self.shots.pop(i)
+                print(hp)
             else:
-                self.shots[i] = self.shots[i].move(0, 1)
+                self.shots[i] = self.shots[i].move(0, 5)
                 pygame.draw.rect(screen, (255, 0, 0), self.shots[i])
 
 
@@ -33,6 +36,8 @@ class Enemy:
 pygame.mixer.pre_init(44100, -16, 1, 512)
 pygame.font.init()
 pygame.init()
+
+clock = pygame.time.Clock()
 
 # Create screen
 screen = pygame.display.set_mode((800, 600))
@@ -46,18 +51,27 @@ pygame.display.set_icon(icon)
 player_shot_sound = pygame.mixer.Sound("rymdspelsljud/spelare_skott.wav")
 enemy_death = pygame.mixer.Sound("rymdspelsljud/spelare_death.wav")
 win_loop = pygame.mixer.Sound("rymdspelsljud/winjingle_1.wav")
+game_over = pygame.mixer.Sound("rymdspelsljud/_game_over.wav")
 
 
-music_loop = pygame.mixer.music.load("rymdspelsljud/edvonk_game_loop.mp3")
+#music_loop = pygame.mixer.music.load("rymdspelsljud/edvonk_game_loop.mp3")
+music_loop = pygame.mixer.music.load("rymdspelsljud/gregurtsmusik_bitcrushed.wav")
 
 ambient_loop = pygame.mixer.Sound("rymdspelsljud/_space_ambience_motor_sounds_whatever.wav")
 ambient_loop.set_volume(0.05)
 
 # Player
-playerImgArray = [pygame.image.load("imgs/P_L.png"), pygame.image.load("imgs/P.png"), pygame.image.load("imgs/P_R.png")]
+playerImgArray = [pygame.image.load("imgs/P_L.png").convert_alpha(), pygame.image.load("imgs/P.png").convert_alpha(), pygame.image.load("imgs/P_R.png").convert_alpha()]
 playerImg = playerImgArray[1]
 playerX = 400-32
 playerY = 600-84
+hp = 3
+
+# Player shots
+shot = 0
+bulletX = 0
+bulletY = 0
+bullet_change = 10
 
 changeX = 0
 
@@ -78,20 +92,14 @@ for i in range(0, 3):
     for j in range(0, 6):
         grid[i].append(Enemy(1 + 96*j, i*96))
 
-deltaX = 0.3
+# Enemy speed
+deltaX = 4
 enemyImg = pygame.image.load("imgs/P.png")
 
 
 def draw_enemy(enemy):
     screen.blit(enemy.image, (enemy.x, enemy.y))
 
-
-# Bullets
-
-shot = 0
-bulletX = 0
-bulletY = 0
-bullet_change = 1
 
 # Game loop
 pygame.mixer.music.play(-1)
@@ -109,10 +117,10 @@ while running:
         # If keystroke is pressed, check if left or right
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                changeX = -1
+                changeX = -5
                 playerImg = playerImgArray[0]
             if event.key == pygame.K_RIGHT:
-                changeX = 1
+                changeX = 5
                 playerImg = playerImgArray[2]
         if event.type == pygame.KEYUP:
             if (event.key == pygame.K_LEFT and changeX < 0) or (event.key == pygame.K_RIGHT and changeX > 0):
@@ -124,8 +132,8 @@ while running:
             if event.key == pygame.K_SPACE:
                 shot = 1
                 bulletY = playerY
-                bulletX = playerX + 32
-                bullet = pygame.Rect(bulletX, bulletY, 2, 4)
+                bulletX = playerX + 30
+                bullet = pygame.Rect(bulletX, bulletY, 4, 8)
                 pygame.draw.rect(screen, (0, 0, 0), bullet)
                 pygame.mixer.Sound.play(player_shot_sound)
 
@@ -145,13 +153,12 @@ while running:
 
     if shot == 1:
         bulletY -= bullet_change
-        bullet = pygame.Rect(bulletX, bulletY, 2, 4)
-        pygame.draw.rect(screen, (0, 0, 0), bullet)
+        bullet = pygame.Rect(bulletX, bulletY, 4, 8)
+        pygame.draw.rect(screen, (0, 255, 0), bullet)
         if bulletY < 0:
             shot = 0
 
     # Update enemy
-
     for i in range(len(grid)-1, -1, -1):
         array = grid[i]
         for j in range(len(array)-1, -1, -1):
@@ -172,6 +179,20 @@ while running:
                 enemy.x += deltaX
                 draw_enemy(enemy)
 
+    if hp == 0:
+        pygame.mixer.music.stop()
+        ambient_loop.stop()
+        screen.fill((255, 255, 255))
+        lose_font = pygame.font.Font('freesansbold.ttf', 64)
+        lose_text = lose_font.render("YOU LOSE", True, (0, 0, 0))
+        screen.blit(lose_text, ((800 - lose_text.get_width()) / 2, (600 - lose_text.get_height()) / 2))
+
+        pygame.mixer.Sound.play(game_over)
+        pygame.display.flip()
+        pygame.time.wait(4000)
+
+        running = False
+
     if len(grid[0]) == 0 and len(grid[1]) == 0 and len(grid[2]) == 0:
         pygame.mixer.music.stop()
         ambient_loop.stop()
@@ -189,3 +210,4 @@ while running:
     # Draw entities
 
     pygame.display.flip()
+    clock.tick_busy_loop(60)
