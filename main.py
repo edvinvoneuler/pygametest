@@ -77,13 +77,14 @@ class EnemyExplosion:
         self.counter = 0
 
     def update(self):
-        if self.counter % 4 == 0:
+        if self.counter % 2 == 0:
             self.index += 1
             if self.index > len(self.image_array) - 1:
                 return False
             self.img = image_array[self.index]
 
         self.counter += 1
+        print(self.counter)
         pygame.Surface.blit(screen, self.img, (self.x, self.y))
 
 
@@ -189,8 +190,13 @@ deltaX = 2
 enemyImg = pygame.image.load("imgs/P.png")
 
 # Image array for explosion animation
-image_array = [pygame.image.load("imgs/exploA1.png").convert_alpha(), pygame.image.load("imgs/exploA2.png").convert_alpha(), pygame.image.load("imgs/exploA3.png").convert_alpha(), pygame.image.load("imgs/exploA3.png").convert_alpha(),
-               pygame.image.load("imgs/exploA4.png").convert_alpha(), pygame.image.load("imgs/exploA5.png").convert_alpha(), pygame.image.load("imgs/exploA6.png").convert_alpha()]
+# TODO: Automate reading images from folders or make a sprite sheet reader
+image_array = [pygame.image.load("imgs/explosion/explosionAgif11-0.png").convert_alpha(),pygame.image.load("imgs/explosion/explosionAgif11-1.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-2.png").convert_alpha(),
+               pygame.image.load("imgs/explosion/explosionAgif11-3.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-3.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-4.png").convert_alpha(),
+               pygame.image.load("imgs/explosion/explosionAgif11-5.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-6.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-7.png").convert_alpha(),
+               pygame.image.load("imgs/explosion/explosionAgif11-8.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-9.png").convert_alpha(),pygame.image.load("imgs/explosion/explosionAgif11-10.png").convert_alpha(),
+               pygame.image.load("imgs/explosion/explosionAgif11-11.png").convert_alpha(),pygame.image.load("imgs/explosion/explosionAgif11-12.png").convert_alpha(), pygame.image.load("imgs/explosion/explosionAgif11-13.png").convert_alpha(),
+               pygame.image.load("imgs/explosion/explosionAgif11-14.png").convert_alpha()]
 explosions = []
 
 # Game loop
@@ -264,7 +270,7 @@ while running:
             deltaX = -deltaX
 
         # If enemies reach too far down, end game.
-        elif grid[i][0].y > HEIGHT-300:
+        elif 0 < len(grid[i]) and grid[i][0].y > HEIGHT-300:
             you_lose()
             running = False
             pygame.quit()
